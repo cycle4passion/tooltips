@@ -51,6 +51,7 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		arrowClass: customParams?.arrowClass ?? '',
 		componentState: customParams?.componentState ?? {},
 		open: customParams?.open ?? false,
+		disabled: customParams?.disabled ?? false,
 		closeQuery: customParams?.closeQuery ?? 'a[href], button',
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		state: customParams?.state ?? (() => {}),
@@ -86,28 +87,29 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		autoUpdateCleanup: () => null
 	};
 
-	// Set initial open/close state - emit=false to prevent infinite loop
-	// if (localState.open === undefined) {
-	// 	// console.log(localState.open);
-	// 	// localState.open = params.open;
-	// 	params.open ? open(false) : close();
-	// }
-
 	// Create Tooltip DOM Elements
 	setDomElements();
 	// Render tooltip on initialization
 	renderTooltip();
 	// Open on initialization if params.open
+	// TODO: not animating on open, shifting arrow
 	if (params.open) setTimeout(() => open(false), delayin);
-
+	// Set initial open/close state - emit=false to prevent infinite loop
+	// if (localState.open === undefined) {
+	// 	// console.log(localState.open);
+	// 	localState.open = params.open;
+	// 	if (params.open) open(false);
+	// 	else close();
+	// }
 	function setDomElements() {
 		// content priority: params.content > title > aria-label
 		content = params.content || triggerNode.title || triggerNode.getAttribute('aria-label') || '';
 
 		// Test for existing explicitly created tooltip in HTML template based on content defining data-popup id
 		if (typeof content === 'string') {
-			// could be quotes is true content (rather than reference), so to prevent crash remove any quotes from content to avoid selector error
-			explicitTooltip = document.querySelector(`[data-popup='${content.replace(/[`"']/g, '')}']`);
+			// could contain quotes if true content (rather than reference), so to prevent crash remove any quotes from content to avoid selector error
+			explicitTooltip = document.querySelector(`[data-popup="${content.replace(/[`"']/g, '')}"]`);
+			console.log(explicitTooltip, content);
 		}
 
 		// If explicit tooltip has been found, use it's uuid reference
@@ -140,17 +142,15 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		triggerNode.setAttribute('aria-describedby', `tooltip-${uuid}`);
 		elemTooltip.setAttribute('role', 'tooltip');
 
-		// Apply reasonable fade in/out transition
+		// Apply reasonable default fade in/out transition
 		elemTooltip.style.display = 'block';
 		elemTooltip.style.opacity = params.open ? '1' : '0';
-		// if (params.transition.default) {
-		// Note, with display: none (prior inital state), initial opacity setting is not recognized by transition on opacity, so display it instead
-		// all open/close are done via opacity. Explicity setting display: block needed below (float-ui turned it to none on init)
-		// elemTooltip.style.transition = 'opacity';
-		// elemTooltip.style.transitionDelay = '1000ms';
-		// elemTooltip.style.transitionDuration = `${params.transition.duration}ms`;
-		// note delayin and delayout handled by eventHandlers
-		// }
+		if (params.transition.default) {
+			elemTooltip.style.transition = 'opacity';
+			elemTooltip.style.transitionDelay = '250ms';
+			elemTooltip.style.transitionDuration = `${params.transition.duration}ms`;
+			// note delayin and delayout handled by eventHandlers
+		}
 
 		// Add content to tooltip
 		if (typeof content === 'string' && !explicitTooltip) elemTooltip.innerHTML = content;
@@ -301,7 +301,8 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 
 	// State Handlers - emit (from action update) used to prevent infinite loop
 	function open(emit = true) {
-		if (!elemTooltip) return;
+		// TODO: fix type error below
+		if (!elemTooltip || params?.disabled || triggerNode.disabled) return;
 		// Set open state to on
 		localState.open = true;
 		// Return the current state
@@ -329,7 +330,7 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	function close(callback: () => void = () => {}) {
-		if (!elemTooltip) return;
+		if (!elemTooltip || params?.disabled || triggerNode.disabled) return;
 		// Set open state to off
 		localState.open = false;
 		// Return the current state

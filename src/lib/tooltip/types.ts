@@ -3,7 +3,7 @@ export declare const storePopup: Writable<any>;
 
 export declare function tooltip2(
 	triggerNode: HTMLElement,
-	params: TooltipSettings,
+	params: TooltipSettings
 ): {
 	update(newParams: TooltipSettings): void;
 	destroy(): void;
@@ -61,6 +61,8 @@ export type TooltipSettings = {
 	componentState?: object;
 	/** Set tooltip open/close state */
 	open?: boolean;
+	/** Allow for disabling */
+	disabled?: boolean;
 	/** Provide the event type. */
 	event?:
 		| 'click'

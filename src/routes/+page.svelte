@@ -8,12 +8,18 @@
 	import { tooltip } from '$lib/tooltip/tooltip';
 
 	let content = 'Tooltip Text';
-	let open = false;
-	let opentt = false;
+	let open = true;
+	let disabled = false;
 	// add or remove from dom to transition happens
 	// $: document
 	// 	.querySelector("`[data-popup='tt-4567']")
 	// 	?.setAttribute('display', open ? 'block' : 'none');
+
+	function toggleTriggerDisabled() {
+		let button = document.querySelector('#button-ex12') as HTMLButtonElement;
+		if (button.disabled) button.removeAttribute('disabled');
+		else button.disabled = true;
+	}
 </script>
 
 <div class="container h-full mx-auto flex flex-col justify-center items-center m-4">
@@ -81,10 +87,9 @@
 						</li>
 						<li>✅ Identify content via title attribute.</li>
 						<li>✅ Identify content via aria-label attribute.</li>
-						<li>✅ Continue to support identifying content via Svelte action parm content</li>
+						<li>✅ Continue to support passing reference to DOM element as content</li>
 						<li>✅ Pass a Svelte Component as content with support for component state</li>
 						<li>✅ Pass HTML string as content</li>
-						<li>✅ Continue to support passing reference to DOM element as content</li>
 						<li>✅ Allow popups to be triggered programmatically.</li>
 						<li>✅ Right click option to trigger tooltip.</li>
 						<li>
@@ -103,14 +108,13 @@
 						</li>
 						<li>✅ Control of built in delayin, delayout, duration for default fade transition</li>
 						<li>✅ The ability to reuse the same popup with multiple triggers</li>
+						<li>
+							✅ Ability to disable/turn off popup(s) through the use of a prop or have popup check
+							the disabled state on the trigger element when open event occurs.
+						</li>
 						<li>❔ Provide much richer and more prominent type safety</li>
 						<li>
 							❌ The ability to set or customize the enter/exit animations for the popup itself
-						</li>
-						<li>
-							❌ Tooltips trigger by hover (unlike click) do to stay frozen to trigger on scroll. I
-							think it related to inherit mouseout that happens on scroll starting transition. How
-							to handle?
 						</li>
 					</ul>
 				</div>
@@ -119,7 +123,7 @@
 	</div>
 	<div class="flex gap-2">
 		<div class="block gap-5">
-			<div id="ex1" class="py-4 flex flex-col gap-2">
+			<!--			<div id="ex1" class="py-4 flex flex-col gap-2">
 				<div>
 					✅ Example #1: Implementation Simple and Clean using "title" attribute<button
 						class="btn btn-sm variant-ghost-surface"
@@ -242,11 +246,11 @@
 					✅ Example #7: Exposing tooltip state (open console log to see state changes)<button
 						class="btn btn-sm variant-ghost-surface"
 						use:tooltip={{ content: 'Tooltip' }}
-						on:toggle={() => console.log('tooltip toggled')}
+						on:toggle={(e) => console.log(`tooltip toggled, state is ${e.detail.state}`)}
 						on:open={() => console.log('tooltip opened')}
 						on:close={() => console.log('tooltip closed')}>Hover me!</button
 					>
-					<!-- TODO: Tooling Error, occurs when more than 2 custom events listened on -->
+					<!~~ TODO: Tooling Error, occurs when more than 2 custom events listened on ~~>
 				</div>
 				<CodeBlock
 					language="html"
@@ -290,7 +294,7 @@
 							tooltipClass: ''
 						}}>Right Click Me!</button
 					>
-					<!-- Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical -->
+					<!~~ Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical ~~>
 					<div data-popup="tt-context123">
 						<div class="btn-group-vertical variant-filled">
 							<button>Delete</button>
@@ -308,7 +312,7 @@
 	tooltipClass: '' /* turn off default tooltip formatting */
 }}>Right Click Me!</button>
 
-<!-- Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical -->
+<!~~ Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical ~~>
 <div data-popup="tt-context123">
 	<div class="btn-group-vertical variant-filled">
 		<button>Delete</button>
@@ -368,9 +372,43 @@
 				/>
 				❓ QUESTION: should close be doubleclick, or just click, or configurable?
 			</div>
-			<hr class="!border-t-4 my-2" />
+			<hr class="!border-t-4 my-2" />-->
 			<div id="ex11" class="py-4 flex flex-col gap-2">
-				❌ Example #11: Custom Transitions - ugly implementation w/all the requirements.
+				<div>
+					✅ Example #11: Disable tooltip via via dsiabled prop<button
+						class="btn btn-sm variant-ghost-surface"
+						use:tooltip={{ disabled: disabled }}
+						title="Tooltip Text">Hover me! Example #11</button
+					>
+					<label><input type="checkbox" class="checkbox" bind:checked={disabled} /> Disabled</label>
+				</div>
+				<CodeBlock
+					language="html"
+					code={`<button use:tooltip title='Tooltip Text'>Hover me! Example #1</button>`}
+				/>
+			</div>
+			<hr class="!border-t-4 my-2" />
+			<div id="ex12" class="py-4 flex flex-col gap-2">
+				<div>
+					✅ Example #12: Disable tooltip via via disabling tooltip trigger<button
+						id="button-ex12"
+						class="btn btn-sm variant-ghost-surface"
+						disabled
+						use:tooltip
+						title="Tooltip Text">Hover me! Example #12</button
+					>
+					<button class="btn btn-sm variant-ghost-surface" on:click={toggleTriggerDisabled}
+						>Toggle Disabled</button
+					>
+				</div>
+				<CodeBlock
+					language="html"
+					code={`<button use:tooltip title='Tooltip Text'>Hover me! Example #1</button>`}
+				/>
+			</div>
+			<hr class="!border-t-4 my-2" />
+			<div id="ex13" class="py-4 flex flex-col gap-2">
+				❌ Example #13: Custom Transitions - ugly implementation w/all the requirements.
 				<ul>
 					<li>
 						• Setting of transition.default = false sets delayin, delayout, duration of default
@@ -385,26 +423,23 @@
 				</ul>
 				<button
 					class="btn btn-sm variant-ghost-surface"
-					on:open={() => (opentt = true)}
-					on:close={() => (opentt = false)}
+					on:toggle={(e) => (open = e.detail.state)}
 					use:tooltip={{
 						event: 'click',
 						content: 'tt666',
 						transition: { default: false }
 					}}>Click Me!</button
 				>
-				<!-- Can't use if, as would not appear in DOM to identify itself, another tooltup added. -->
-				<!-- {#key opentt} -->
-				{#if open}
+				<!-- Csnnot use {#if open} because not in DOM to identify as explicit content. -->
+				{#key open}
 					<!-- Use wrapper of content here and apply transitions to it, setup for future slot -->
-					<div data-popup="tt666" transition:fly={{ duration: 2000, y: -500 }}>
+					<div data-popup="tt666" transition:fly={{ duration: 2000, x: 200, y: -500, opacity: 1 }}>
 						<div>I'm the content with custom transition</div>
+						<div id="arrow-tt666" />
 					</div>
-					<div id="arrow-tt666" />
-				{/if}
-				<!-- {/key} -->
+				{/key}
 				<div>
-					open={opentt}
+					open={open}
 				</div>
 				Hoping for something like
 				<CodeBlock
