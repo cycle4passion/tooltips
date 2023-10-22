@@ -8,8 +8,8 @@
 	import { tooltip } from '$lib/tooltip/tooltip';
 
 	let content = 'Tooltip Text';
-	let open = true;
-	let disabled = false;
+	let open = false;
+	let disabled = true;
 	// add or remove from dom to transition happens
 	// $: document
 	// 	.querySelector("`[data-popup='tt-4567']")
@@ -123,7 +123,7 @@
 	</div>
 	<div class="flex gap-2">
 		<div class="block gap-5">
-			<!--			<div id="ex1" class="py-4 flex flex-col gap-2">
+			<div id="ex1" class="py-4 flex flex-col gap-2">
 				<div>
 					✅ Example #1: Implementation Simple and Clean using "title" attribute<button
 						class="btn btn-sm variant-ghost-surface"
@@ -250,7 +250,7 @@
 						on:open={() => console.log('tooltip opened')}
 						on:close={() => console.log('tooltip closed')}>Hover me!</button
 					>
-					<!~~ TODO: Tooling Error, occurs when more than 2 custom events listened on ~~>
+					<!-- TODO: Tooling Error, occurs when more than 2 custom events listened on -->
 				</div>
 				<CodeBlock
 					language="html"
@@ -294,7 +294,7 @@
 							tooltipClass: ''
 						}}>Right Click Me!</button
 					>
-					<!~~ Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical ~~>
+					<!-- Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical -->
 					<div data-popup="tt-context123">
 						<div class="btn-group-vertical variant-filled">
 							<button>Delete</button>
@@ -372,7 +372,7 @@
 				/>
 				❓ QUESTION: should close be doubleclick, or just click, or configurable?
 			</div>
-			<hr class="!border-t-4 my-2" />-->
+			<hr class="!border-t-4 my-2" />
 			<div id="ex11" class="py-4 flex flex-col gap-2">
 				<div>
 					✅ Example #11: Disable tooltip via via dsiabled prop<button
@@ -384,7 +384,7 @@
 				</div>
 				<CodeBlock
 					language="html"
-					code={`<button use:tooltip title='Tooltip Text'>Hover me! Example #1</button>`}
+					code={`<button use:tooltip={{ disabled: disabled }} title='Tooltip Text'>Hover me! Example #11</button>`}
 				/>
 			</div>
 			<hr class="!border-t-4 my-2" />
@@ -403,7 +403,7 @@
 				</div>
 				<CodeBlock
 					language="html"
-					code={`<button use:tooltip title='Tooltip Text'>Hover me! Example #1</button>`}
+					code={`<button use:tooltip disabled title='Tooltip Text'>Hover me! Example #12</button>`}
 				/>
 			</div>
 			<hr class="!border-t-4 my-2" />
