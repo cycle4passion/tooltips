@@ -370,8 +370,8 @@
 				<CodeBlock
 					language="html"
 					code={`<button use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me!</button>
-					<div data-popup="101112">I'm the content only declared once</div>
-					<button use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me Too!</button>`}
+<div data-popup="101112">I'm the content only declared once</div>
+<button use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me Too!</button>`}
 				/>
 			</div>
 			<div>❌ ISSUE: arrow not centered on 2nd?</div>
