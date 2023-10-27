@@ -1,35 +1,32 @@
 <script lang="ts">
-	import type { TooltipSettings } from '$lib/tooltip/types.js';
-	import { CodeBlock, SlideToggle } from '@skeletonlabs/skeleton';
+	import { CodeBlock, SlideToggle, popup } from '@skeletonlabs/skeleton';
 	import Component from './Component.svelte';
-	import { fly, fade } from 'svelte/transition';
-	// above for demo only, not needed for tooltip
-	// import Transition from './Tooltip.svelte';
-	import { tooltip } from '$lib/tooltip/tooltip';
-
-	let content = 'Tooltip Text';
-	let open = false;
-	let disabled = true;
-	// add or remove from dom to transition happens
-	// $: document
-	// 	.querySelector("`[data-popup='tt-4567']")
-	// 	?.setAttribute('display', open ? 'block' : 'none');
+	import { fly } from 'svelte/transition';
 
 	function toggleTriggerDisabled() {
 		let button = document.querySelector('#button-ex12') as HTMLButtonElement;
 		if (button.disabled) button.removeAttribute('disabled');
 		else button.disabled = true;
 	}
+
+	// above for demo only, not needed for tooltip
+
+	import type { TooltipSettings } from '$lib/tooltip/types.js';
+	import { tooltip } from '$lib/tooltip/tooltip';
+
+	let content = 'Tooltip Text';
+	let open = false;
+	let disabled = true;
 </script>
 
 <div class="container h-full mx-auto flex flex-col justify-center items-center m-4">
-	<h1 class="text-xl">Skeleton Tooltips Action - WIP</h1>
+	<h1 class="text-xl">Skeleton Tooltips Action - WIP Updated 10/22/23</h1>
 	<div class="flex flex-start">
 		<ul class="p-5">
 			<li class="p-1">🟢 Written for SkeletonUI V2</li>
 			<li class="p-1">
-				🟢 Works as a replacement for SkeletonUI popup. Therefore need to implement in +layout lke
-				before (<a
+				🟢 Works as a replacement for SkeletonUI popup. Therefore still needs to implement in
+				+layout lke before (<a
 					href="https://www.skeleton.dev/utilities/popups#installation"
 					class="anchor"
 					target="_blank">See Docs</a
@@ -43,12 +40,29 @@
 			<li>
 				<details>
 					<summary>Current Popup Problems</summary>
-					The Current popup arrow is difficult to style. If you wish a border or ring (box-shadow). It
-					creates a box, rotates it, but all 4 edges are shown (including 2 inapproprite ones inside
-					tooltip). You cannot leave it to user to hide these because they vary as float-ui is smart
-					and despite requested side for displaying the popup, it will flip to other side, and shift
-					in order to display it without cropping. The user cannot easily handle this. My implementation
-					does.
+					<p class="py-2 px-4">
+						The Current popup arrow is difficult to style. If you wish a border or ring
+						(box-shadow). It creates a box, rotates it, but all 4 edges are shown (including 2
+						inapproprite ones inside tooltip). You cannot leave it to user to hide these because
+						they vary as float-ui is smart and despite requested side for displaying the popup, it
+						will flip to other side, and shift in order to display it without cropping. The user
+						cannot easily handle this. My implementation does.
+					</p>
+					<p class="py-2">
+						current popup example:
+						<button
+							class="btn btn-sm variant-ghost-surface"
+							use:popup={{ event: 'click', target: 'popup-problems', placement: 'top' }}
+							>Click Me!</button
+						>
+					</p>
+					<div
+						class="card z-99 !ring-1 !ring-primary-500 rounded-xl px-2 py-1 text-sm shadow-xl"
+						data-popup="popup-problems"
+					>
+						This is tooltip text
+						<div class="arrow z-99 !ring-1 !ring-primary-500 shadow-xl" />
+					</div>
 				</details>
 			</li>
 			<li class="p-1">
@@ -85,36 +99,70 @@
 							✅ Tooltip Arrow inherits z-index, background from Tooltip and appropriately displays
 							ring/border.
 						</li>
-						<li>✅ Identify content via title attribute.</li>
-						<li>✅ Identify content via aria-label attribute.</li>
-						<li>✅ Continue to support passing reference to DOM element as content</li>
-						<li>✅ Pass a Svelte Component as content with support for component state</li>
-						<li>✅ Pass HTML string as content</li>
-						<li>✅ Allow popups to be triggered programmatically.</li>
-						<li>✅ Right click option to trigger tooltip.</li>
-						<li>
-							✅ Longpress option to trigger tooltip. Duration is configurable is params via
-							longPressDuration
-						</li>
-						<li>✅ Dblclick option to trigger tooltip.</li>
-						<li>✅ Fix transition not showing on first trigger.</li>
-						<li>
-							✅ Better status updates to the outside for when the popup is opened, closed or
-							toggled.
-						</li>
-						<li>
-							✅ Throttled hover trigger. quick mouseovers (on the way to other intentions) don't
-							trigger hover trigger below delayin threshold.
-						</li>
+						<li>✅ If trigger is hover also support show/hide on focus/blur - ally recommended.</li>
 						<li>✅ Control of built in delayin, delayout, duration for default fade transition</li>
-						<li>✅ The ability to reuse the same popup with multiple triggers</li>
-						<li>
-							✅ Ability to disable/turn off popup(s) through the use of a prop or have popup check
-							the disabled state on the trigger element when open event occurs.
-						</li>
+						<li />
+						<li>✅ Fix transition not showing on first trigger.</li>
 						<li>❔ Provide much richer and more prominent type safety</li>
 						<li>
-							❌ The ability to set or customize the enter/exit animations for the popup itself
+							✅ Throttled hover trigger. quick mouseovers (on the way to other intentions) don't
+							trigger hover trigger below delayin threshold. <a href="#ex1" class="anchor">#1</a>
+						</li>
+						<li>✅ Identify content via title attribute. <a href="#ex1" class="anchor">#1</a></li>
+						<li>
+							✅ Identify content via aria-label attribute. <a href="#ex2" class="anchor">#2</a>
+						</li>
+						<li>
+							✅ Continue to support passing reference to DOM element as content. <a
+								href="#ex3"
+								class="anchor">#3</a
+							>
+						</li>
+						<li>✅ Pass HTML string as content. <a href="#ex4" class="anchor">#4</a></li>
+						<li>✅ Use hardcoded content. <a href="#ex5" class="anchor">#5</a></li>
+						<li>
+							✅ Pass a Svelte Component as content with support for component state. <a
+								href="#ex6"
+								class="anchor">#6</a
+							>
+						</li>
+						<li>
+							✅ Better status updates to the outside for when the popup is opened, closed or
+							toggled. <a href="#ex7" class="anchor">#7</a>
+						</li>
+						<li>
+							✅ Allow popups to be triggered programmatically. <a href="#ex8" class="anchor">#8</a>
+						</li>
+						<li>
+							✅ The ability to reuse the same popup with multiple triggers <a
+								href="#ex9"
+								class="anchor">#9</a
+							>
+						</li>
+						<li>
+							✅ The ability to link triggers so opening in 1 location, opens all tooltips with same
+							data-popup. <a href="#ex10" class="anchor">#10</a>
+						</li>
+						<li>
+							✅ Trigger by contextmenu (right-click). <a href="#ex11" class="anchor">#11</a>
+						</li>
+						<li>
+							✅ Longpress option to trigger tooltip. Duration is configurable is params via
+							longPressDuration. <a href="#ex12" class="anchor">#12</a>
+						</li>
+						<li>✅ Dblclick option to trigger tooltip. <a href="#ex13" class="anchor">#13</a></li>
+						<li>
+							✅ Ability to disable/turn off tooltip(s) through the use of a prop <a
+								href="#ex-14"
+								class="anchor">#14</a
+							>, or have tooltip check the disabled if trigger element is disabled
+							<a href="#ex-15" class="anchor">#15</a>.
+						</li>
+						<li>
+							❌ The ability to customize the enter/exit animations for the tooltip popup. <a
+								href="#ex-16"
+								class="anchor">#16</a
+							>
 						</li>
 					</ul>
 				</div>
@@ -208,7 +256,7 @@
 <div data-popup="uniqueID1234">I'm hardcoded content!</div>`}
 				/>
 				Also you could use a Svelte Component as content instead of div, just add the data-popup="uniqueID1234"
-				to the element in the Component wrapping the content. ❌ PROBLEM: rendering loop
+				to the element in the Component wrapping the content.
 			</div>
 			<hr class="!border-t-4 my-2" />
 			<div id="ex6" class="py-4 flex flex-col gap-2">
@@ -276,16 +324,61 @@
 					language="html"
 					code={`<scr` +
 						`ipt>
-  let open = false;
-</script>
-
-<button use:tooltip={{ content: 'Tooltip', open: open }}>Hover Me</button>`}
+						let open = false;
+						</script>
+						
+						<button use:tooltip={{ content: 'Tooltip', open: open }}>Hover Me</button>`}
 				/>
+				❌ ISSUE: Weirdness on first change
 			</div>
 			<hr class="!border-t-4 my-2" />
 			<div id="ex9" class="py-4 flex flex-col gap-2">
+				✅ Example #9: Defined tooltip content once, use for multiple trigger Nodes
+				<div class="flex gap-2">
+					<button class="btn btn-sm variant-ghost-surface w-full" use:tooltip={{ content: '6789' }}
+						>Hover Me!</button
+					>
+					<div data-popup="6789">I'm the content only declared once</div>
+					<button class="btn btn-sm variant-ghost-surface w-full" use:tooltip={{ content: '6789' }}
+						>Hover Me Too!</button
+					>
+				</div>
+				<CodeBlock
+					language="html"
+					code={`<button class="btn btn-sm variant-ghost-surface" use:tooltip={{ content: '6789' }}>Hover Me!</button>
+
+<div data-popup="tt-6789">I'm the content only declared once</div>
+
+<button class="btn btn-sm variant-ghost-surface" use:tooltip={{ content: '6789' }}>Hover Me Too!</button>`}
+				/>
+			</div>
+
+			<hr class="!border-t-4 my-2" />
+			<div id="ex10" class="py-4 flex flex-col gap-2">
+				✅ Example #10: Trigger tooltip in one location, and it display in multiple.
+				<div class="flex">
+					<button
+						class="btn btn-sm variant-ghost-surface w-full"
+						use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me!</button
+					>
+					<div data-popup="101112">I'm the content only declared once</div>
+					<button
+						class="btn btn-sm variant-ghost-surface w-full"
+						use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me Too!</button
+					>
+				</div>
+				<CodeBlock
+					language="html"
+					code={`<button use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me!</button>
+					<div data-popup="101112">I'm the content only declared once</div>
+					<button use:tooltip={{ content: '101112', linkTriggers: true }}>Hover Me Too!</button>`}
+				/>
+			</div>
+			<div>❌ ISSUE: arrow not centered on 2nd?</div>
+			<hr class="!border-t-4 my-2" />
+			<div id="ex11" class="py-4 flex flex-col gap-2">
 				<div>
-					✅ Example #9: Trigger by contextmenu (right-click) <button
+					✅ Example #11: Trigger by contextmenu (right-click) <button
 						class="btn btn-sm variant-ghost-surface"
 						use:tooltip={{
 							content: 'tt-context123',
@@ -294,12 +387,12 @@
 							tooltipClass: ''
 						}}>Right Click Me!</button
 					>
-					<!-- Wrapper needed b/c popup uses block, and we need flex for btn-group-vertical -->
+
 					<div data-popup="tt-context123">
 						<div class="btn-group-vertical variant-filled">
-							<button>Delete</button>
-							<button>Update</button>
-							<button>Cancel</button>
+							<button on:click={() => console.log('Delete something...')}>Delete</button>
+							<button on:click={() => console.log('Update something...')}>Update</button>
+							<button on:click={() => console.log('Cancel something...')}>Cancel</button>
 						</div>
 					</div>
 				</div>
@@ -323,29 +416,9 @@
 				/>
 			</div>
 			<hr class="!border-t-4 my-2" />
-			<div id="ex10" class="py-4 flex flex-col gap-2">
-				✅ Example #10: Defined tooltip content once, use it multiple for more than 1 trigger
-				<button class="btn btn-sm variant-ghost-surface" use:tooltip={{ content: '6789' }}
-					>Hover Me!</button
-				>
-				<div data-popup="6789">I'm the content only declared once</div>
-				<button class="btn btn-sm variant-ghost-surface" use:tooltip={{ content: '6789' }}
-					>Hover Me Too!</button
-				>
-				<CodeBlock
-					language="html"
-					code={`<button class="btn btn-sm variant-ghost-surface" use:tooltip={{ content: '6789' }}>Hover Me!</button>
-
-<div data-popup="tt-6789">I'm the content only declared once</div>
-
-<button class="btn btn-sm variant-ghost-surface" use:tooltip={{ content: 'tt-6789' }}>Hover Me Too!</button>`}
-				/>
-			</div>
-
-			<hr class="!border-t-4 my-2" />
-			<div id="ex11" class="py-4 flex flex-col gap-2">
+			<div id="ex12" class="py-4 flex flex-col gap-2">
 				<div>
-					✅ Example #11: Longpress Trigger<button
+					✅ Example #12: Longpress Trigger<button
 						class="btn btn-sm variant-ghost-surface"
 						use:tooltip={{ event: 'longpress' }}
 						title="You triggered me by Longpress">Lonpress me!</button
@@ -353,14 +426,14 @@
 				</div>
 				<CodeBlock
 					language="html"
-					code={`<button use:tooltip title='Tooltip Text'>Hover me! Example #1</button>`}
+					code={`<button use:tooltip title='Tooltip Text'>Hover me! Example #12</button>`}
 				/>
-				❓ QUESTION: should close be longpress, or just click, or configurable?
+				❓ QUESTION: should close via TriggerNode be longpress, or just click, or configurable?
 			</div>
 			<hr class="!border-t-4 my-2" />
-			<div id="ex12" class="py-4 flex flex-col gap-2">
+			<div id="ex13" class="py-4 flex flex-col gap-2">
 				<div>
-					✅ Example #12: Doubleclick Trigger<button
+					✅ Example #13: Doubleclick Trigger<button
 						class="btn btn-sm variant-ghost-surface"
 						use:tooltip={{ event: 'dblclick' }}
 						title="You trigger me by DoubleClick">DoubleClick Me!</button
@@ -370,32 +443,34 @@
 					language="html"
 					code={`<button use:tooltip={{ event: 'dblclick' }} title='Tooltip Text'>DoubleClick Me!</button>`}
 				/>
-				❓ QUESTION: should close be doubleclick, or just click, or configurable?
+				❓ QUESTION: should close via triggerNode be doubleclick, or just click, or configurable?
 			</div>
 			<hr class="!border-t-4 my-2" />
-			<div id="ex11" class="py-4 flex flex-col gap-2">
+			<div id="ex14" class="py-4 flex flex-col gap-2">
 				<div>
-					✅ Example #11: Disable tooltip via via dsiabled prop<button
+					✅ Example #14: Disable tooltip via via disabled prop<button
 						class="btn btn-sm variant-ghost-surface"
 						use:tooltip={{ disabled: disabled }}
-						title="Tooltip Text">Hover me! Example #11</button
+						title="Tooltip Text">Hover me! Example #14</button
 					>
 					<label><input type="checkbox" class="checkbox" bind:checked={disabled} /> Disabled</label>
 				</div>
 				<CodeBlock
 					language="html"
-					code={`<button use:tooltip={{ disabled: disabled }} title='Tooltip Text'>Hover me! Example #11</button>`}
+					code={`<button use:tooltip={{ disabled: disabled }} title='Tooltip Text'>Hover me! Example #11</button>
+					
+<label><input type="checkbox" class="checkbox" bind:checked={disabled} /> Disabled</label>`}
 				/>
 			</div>
 			<hr class="!border-t-4 my-2" />
 			<div id="ex12" class="py-4 flex flex-col gap-2">
 				<div>
-					✅ Example #12: Disable tooltip via via disabling tooltip trigger<button
+					✅ Example #15: Disable tooltip via via disabling tooltip trigger<button
 						id="button-ex12"
 						class="btn btn-sm variant-ghost-surface"
 						disabled
 						use:tooltip
-						title="Tooltip Text">Hover me! Example #12</button
+						title="Tooltip Text">Hover me! Example #15</button
 					>
 					<button class="btn btn-sm variant-ghost-surface" on:click={toggleTriggerDisabled}
 						>Toggle Disabled</button
@@ -403,12 +478,14 @@
 				</div>
 				<CodeBlock
 					language="html"
-					code={`<button use:tooltip disabled title='Tooltip Text'>Hover me! Example #12</button>`}
+					code={`<button use:tooltip disabled title='Tooltip Text'>Hover me! Example #12</button>
+					
+<button on:click={toggleTriggerDisabled}>Toggle Disabled</button>`}
 				/>
 			</div>
 			<hr class="!border-t-4 my-2" />
-			<div id="ex13" class="py-4 flex flex-col gap-2">
-				❌ Example #13: Custom Transitions - ugly implementation w/all the requirements.
+			<div id="ex16" class="py-4 flex flex-col gap-2">
+				❌ Example #16: Custom Transitions - ugly implementation w/all the requirements.
 				<ul>
 					<li>
 						• Setting of transition.default = false sets delayin, delayout, duration of default
@@ -420,22 +497,25 @@
 						TransitionOut respecting $prefersReducedMotionStore.
 					</li>
 					<li>• Finally, clean up implementation with slots and shifting attributes.</li>
+					<li>• Looking for help here.</li>
 				</ul>
+				<!-- TODO: fix type error below -->
+				<!-- Take advantage of customeEvents for open/close to update state here from transition in/out -->
 				<button
 					class="btn btn-sm variant-ghost-surface"
-					on:toggle={(e) => (open = e.detail.state)}
+					on:open={() => (open = true)}
+					on:close={() => (open = false)}
 					use:tooltip={{
 						event: 'click',
 						content: 'tt666',
-						transition: { default: false }
+						transition: { default: false } /* turns off default transition */
 					}}>Click Me!</button
 				>
-				<!-- Csnnot use {#if open} because not in DOM to identify as explicit content. -->
+				<!-- Cannot use {#if open} because if open-false (usual start state), it is not in DOM therefore unable to be identified as potential explicit content. -->
 				{#key open}
 					<!-- Use wrapper of content here and apply transitions to it, setup for future slot -->
-					<div data-popup="tt666" transition:fly={{ duration: 2000, x: 200, y: -500, opacity: 1 }}>
+					<div data-popup="tt666" transition:fly={{ duration: 2000, x: 200, y: -500, opacity: 0 }}>
 						<div>I'm the content with custom transition</div>
-						<div id="arrow-tt666" />
 					</div>
 				{/key}
 				<div>
@@ -445,8 +525,6 @@
 				<CodeBlock
 					language="html"
 					code={`<button
-	on:open={() => opentt = true}
-	on:close={() => opentt = false}
 	use:tooltip={{ event: 'click', content: 'tt666', transition: { default: false } }}>Click Me!</button>
 <Transition 
 	dataPopup="tt666"

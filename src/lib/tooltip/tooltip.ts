@@ -13,12 +13,12 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 	triggerNode,
 	customParams
 ) => {
-	let uuid = crypto.randomUUID().slice(0, 5);
 	let elemTooltip: HTMLElement;
 	let elemArrow: HTMLElement;
 	let content: any;
 	let explicitTooltip: HTMLElement | null = null;
 	let prevElemTooltip: HTMLElement | null;
+	let cloneElemTooltip: HTMLElement | null;
 	let prevElemArrow: HTMLElement | null;
 	let clickTimer: number;
 	const focusableAllowedList =
@@ -51,7 +51,10 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		arrowClass: customParams?.arrowClass ?? '',
 		componentState: customParams?.componentState ?? {},
 		open: customParams?.open ?? false,
+		uuid: customParams?.uuid ?? crypto.randomUUID().slice(0, 5),
 		disabled: customParams?.disabled ?? false,
+		linkDisabledToTrigger: customParams?.linkDisabledToTrigger ?? true,
+		linkTriggers: customParams?.linkTriggers ?? false,
 		closeQuery: customParams?.closeQuery ?? 'a[href], button',
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		state: customParams?.state ?? (() => {}),
@@ -67,19 +70,9 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		}
 	};
 
-	// TODO: move below to setDOMElements or render?
-	// if (!params.transition.default) {
-	// 	params.transition.duration = 0;
-	// 	params.transition.delayin = 0;
-	// 	params.transition.delayout = 0;
-	// }
 	const { delayin, delayout } = params.transition;
 
-	/*
-	TODO: no intial transition on show
-	TODO: default tansition on/off
-	TODO: custom transitons,
-	*/
+	/*	TODO: custom transitons	*/
 
 	// Local State
 	const localState: TooltipState = {
@@ -92,39 +85,38 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 	// Render tooltip on initialization
 	renderTooltip();
 	// Open on initialization if params.open
-	// TODO: not animating on open, shifting arrow
 	if (params.open) setTimeout(() => open(false), delayin);
-	// Set initial open/close state - emit=false to prevent infinite loop
-	// if (localState.open === undefined) {
-	// 	// console.log(localState.open);
-	// 	localState.open = params.open;
-	// 	if (params.open) open(false);
-	// 	else close();
-	// }
+
 	function setDomElements() {
 		// content priority: params.content > title > aria-label
 		content = params.content || triggerNode.title || triggerNode.getAttribute('aria-label') || '';
 
-		// Test for existing explicitly created tooltip in HTML template based on content defining data-popup id
+		// Test for existing explicitly created tooltip in HTML template based on content referencing data-popup id string, and positioned immediately following triggerNode
 		if (typeof content === 'string') {
-			// could contain quotes if true content (rather than reference), so to prevent crash remove any quotes from content to avoid selector error
-			explicitTooltip = document.querySelector(`[data-popup="${content.replace(/[`"']/g, '')}"]`);
-			console.log(explicitTooltip, content);
+			// content param could contain quotes if it is actual string content (rather than a reference),
+			// so to prevent crash remove any quotes from content to avoid selector error
+			const nextSibling = triggerNode.nextElementSibling;
+			if (nextSibling && nextSibling.getAttribute('data-popup') === content.replace(/[`"']/g, ''))
+				explicitTooltip = nextSibling as HTMLElement;
+			// If explicit tooltip has been found, use it's uuid reference
+			if (explicitTooltip) params.uuid = content;
 		}
 
-		// If explicit tooltip has been found, use it's uuid reference
-		if (explicitTooltip) uuid = content;
+		const elsewhere =
+			typeof content === 'string' &&
+			document.querySelector(`[data-popup='${content.replace(/[`"']/g, '')}']`);
+		if (elsewhere) {
+			cloneElemTooltip = elsewhere.cloneNode(true) as HTMLElement;
+			params.uuid = content;
+		}
 
-		// Update or Create tooltip elements
-		prevElemTooltip = document.querySelector(`#tooltip-${uuid}`);
-		elemTooltip = explicitTooltip ?? prevElemTooltip ?? document.createElement('div');
+		elemTooltip = explicitTooltip ?? cloneElemTooltip ?? document.createElement('div');
 
 		// Remove title, so no interference of native title w/ our tooltip
 		triggerNode.removeAttribute('title');
 
 		// identify as a tooltip
-		elemTooltip.setAttribute('id', `tooltip-${uuid}`);
-		if (!explicitTooltip) elemTooltip.setAttribute('data-popup', uuid);
+		if (!explicitTooltip && !cloneElemTooltip) elemTooltip.setAttribute('data-popup', params.uuid);
 
 		// Turn off pointer node events of children of elemTrigger for hover (anti-flicker)
 		// see https://www.skeleton.dev/utilities/popups#hover
@@ -133,13 +125,13 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 
 		// Add aria attributes for A11y
 		if (
-			!triggerNode.getAttribute('aria-label') &&
+			!triggerNode.getAttribute('aria-label') /*
 			!explicitTooltip &&
 			typeof content === 'string' &&
-			!(content.includes('<') && content.includes('>'))
+			!(content.includes('<') && content.includes('>')) */
 		)
 			triggerNode.setAttribute('aria-label', content);
-		triggerNode.setAttribute('aria-describedby', `tooltip-${uuid}`);
+		triggerNode.setAttribute('aria-describedby', `tooltip-${params.uuid}`);
 		elemTooltip.setAttribute('role', 'tooltip');
 
 		// Apply reasonable default fade in/out transition
@@ -153,24 +145,25 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		}
 
 		// Add content to tooltip
-		if (typeof content === 'string' && !explicitTooltip) elemTooltip.innerHTML = content;
+		if (typeof content === 'string' && !explicitTooltip && !cloneElemTooltip)
+			elemTooltip.innerHTML = content;
 
 		// Apply custom tooltip classes
-		elemTooltip.className = ('tooltip ' + params.tooltipClass).trim();
+		elemTooltip.className = (`tooltip-${params.uuid} ` + params.tooltipClass).trim();
 
 		// Add tooltip to DOM
-		if (!explicitTooltip && !prevElemTooltip)
+		if (!explicitTooltip)
 			(triggerNode.parentNode as HTMLElement).insertBefore(elemTooltip, triggerNode.nextSibling);
 		if (!prevElemTooltip && isSvelteComponent(content)) {
 			new content({
-				target: document.querySelector(`#tooltip-${uuid}`) as HTMLElement,
+				target: elemTooltip as HTMLElement,
 				props: params.componentState
 			});
 		}
 	}
 
 	// Render Floating UI Popup
-	async function renderTooltip() {
+	function renderTooltip() {
 		if (!content) return;
 		console.log('render');
 
@@ -178,7 +171,7 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		['computePosition', 'offset', 'shift', 'flip', 'arrow'].forEach((mw) => {
 			if (!eval(mw))
 				throw new Error(
-					`Floating UI '${mw}' not found for content idenitified by data-popup=["${uuid}"]. ${documentationLink}`
+					`Floating UI '${mw}' not found for content idenitified by data-popup=["${params.uuid}"]. ${documentationLink}`
 				);
 		});
 
@@ -220,9 +213,9 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 			// Handle Arrow Placement: https://floating-ui.com/docs/arrow
 			if (!params?.includeArrow) {
 				// remove prior arrow
-				document.querySelector(`#arrow-${uuid}`)?.remove();
+				document.querySelector(`.arrow-${params.uuid}`)?.remove();
 			} else {
-				prevElemArrow = document.querySelector(`#arrow-${uuid}`);
+				prevElemArrow = elemTooltip.querySelector(`.arrow-${params.uuid}`);
 				elemArrow = prevElemArrow ?? document.createElement('div');
 				elemArrow.setAttribute('role', 'tooltip');
 
@@ -241,7 +234,7 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 					[staticSide as string]: '-4px'
 				});
 
-				elemArrow.setAttribute('id', `arrow-${uuid}`);
+				elemArrow.setAttribute('id', `arrow-${params.uuid}`);
 				elemArrow.style.setProperty('background-color', 'inherit');
 				elemArrow.style.setProperty('z-index', 'inherit');
 
@@ -291,7 +284,7 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 				}
 
 				// Apply arrow classes
-				elemArrow.className = ('arrow ' + params.arrowClass).trim();
+				elemArrow.className = (`arrow arrow-${params.uuid} ` + params.arrowClass).trim();
 
 				// Add arrow to DOM
 				if (!prevElemArrow) elemTooltip.appendChild(elemArrow);
@@ -301,50 +294,86 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 
 	// State Handlers - emit (from action update) used to prevent infinite loop
 	function open(emit = true) {
-		// TODO: fix type error below
-		if (!elemTooltip || params?.disabled || triggerNode.disabled) return;
 		// Set open state to on
 		localState.open = true;
 		// Return the current state
 		if (params.state) params.state({ state: localState.open });
 		// Update render settings, it might have moved.
 		renderTooltip();
-		// Update the DOM
-		elemTooltip.style.opacity = '1';
-		// elemTooltip.style.display = 'block';
-		elemTooltip.style.pointerEvents = 'auto';
-		// Enable popup interactions
-		elemTooltip.removeAttribute('inert');
-		// Trigger Floating UI autoUpdate (open only) - tooltip follows scroll/resize
-		// https://floating-ui.com/docs/autoUpdate
-		// without emit, this causes infinite loop
-		if (emit) localState.autoUpdateCleanup = autoUpdate(triggerNode, elemTooltip, renderTooltip);
-		// Focus the first focusable element within the popup
-		focusableTooltipElements = Array.from(elemTooltip?.querySelectorAll(focusableAllowedList));
-		// Update the outside triggerNode customEvents
-		fireCustomEvent(triggerNode, 'toggle', { state: localState.open });
-		fireCustomEvent(triggerNode, 'open', {
-			state: localState.open
+
+		const tts = params.linkTriggers
+			? [...document.querySelectorAll(`[data-popup='${params.uuid}']`)]
+			: [elemTooltip];
+		tts.forEach((elem) => {
+			// Check for disabled
+			// TODO: fix type error below
+			if (params?.disabled || (params.linkDisabledToTrigger && triggerNode.disabled)) return;
+			// Update the DOM
+			(elem as HTMLElement).style.opacity = '1';
+			// elem.style.display = 'block';
+			(elem as HTMLElement).style.pointerEvents = 'auto';
+			// Enable popup interactions
+			elem.removeAttribute('inert');
+			// Trigger Floating UI autoUpdate (open only) - tooltip follows scroll/resize
+			// https://floating-ui.com/docs/autoUpdate
+			// without emit, this causes infinite loop
+			if (emit)
+				localState.autoUpdateCleanup = autoUpdate(triggerNode, elem as HTMLElement, renderTooltip);
+			// Focus the first focusable element within the popup
+			focusableTooltipElements = Array.from(
+				(elem as HTMLElement)?.querySelectorAll(focusableAllowedList)
+			);
+			// Update the outside triggerNode customEvents
+			fireCustomEvent(triggerNode, 'toggle', { state: localState.open });
+			fireCustomEvent(triggerNode, 'open', {
+				state: localState.open
+			});
+			/*			// Update the DOM
+			elemTooltip.style.opacity = '1';
+			// elemTooltip.style.display = 'block';
+			elemTooltip.style.pointerEvents = 'auto';
+			// Enable popup interactions
+			elemTooltip.removeAttribute('inert');
+			// Trigger Floating UI autoUpdate (open only) - tooltip follows scroll/resize
+			// https://floating-ui.com/docs/autoUpdate
+			// without emit, this causes infinite loop
+			if (emit) localState.autoUpdateCleanup = autoUpdate(triggerNode, elemTooltip, renderTooltip);
+			// Focus the first focusable element within the popup
+			focusableTooltipElements = Array.from(elemTooltip?.querySelectorAll(focusableAllowedList));
+			// Update the outside triggerNode customEvents
+			fireCustomEvent(triggerNode, 'toggle', { state: localState.open });
+			fireCustomEvent(triggerNode, 'open', {
+				state: localState.open
+			});*/
 		});
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	function close(callback: () => void = () => {}) {
-		if (!elemTooltip || params?.disabled || triggerNode.disabled) return;
 		// Set open state to off
 		localState.open = false;
 		// Return the current state
 		if (params.state) params.state({ state: localState.open });
-		// Update the DOM
-		elemTooltip.style.opacity = '0';
-		// disable popup interactions
-		elemTooltip.setAttribute('inert', '');
-		// Cleanup Floating UI autoUpdate (close only) - tooltip follows scroll/resize
-		if (localState.autoUpdateCleanup) localState.autoUpdateCleanup();
-		// update the outside triggerNode customEvents
-		fireCustomEvent(triggerNode, 'toggle', { state: localState.open });
-		fireCustomEvent(triggerNode, 'close', {
-			state: localState.open
+		const tts = params.linkTriggers
+			? [...document.querySelectorAll(`[data-popup='${params.uuid}']`)]
+			: [elemTooltip];
+
+		tts.forEach((elem) => {
+			// Check for disabled
+			// TODO: fix type error
+			const triggerElem = triggerNode as HTMLInputElement | HTMLButtonElement;
+			if (params?.disabled || (params.linkDisabledToTrigger && triggerElem.disabled)) return;
+			// Update the DOM
+			(elem as HTMLElement).style.opacity = '0';
+			// disable popup interactions
+			(elem as HTMLElement).setAttribute('inert', '');
+			// Cleanup Floating UI autoUpdate (close only) - tooltip follows scroll/resize
+			if (localState.autoUpdateCleanup) localState.autoUpdateCleanup();
+			// update the outside triggerNode customEvents
+			fireCustomEvent(triggerNode, 'toggle', { state: localState.open });
+			fireCustomEvent(triggerNode, 'close', {
+				state: localState.open
+			});
 		});
 		// Trigger callback
 		if (callback) callback();
@@ -448,7 +477,7 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 		case 'hover':
 			triggerNode.addEventListener('mouseover', throttledHover, true);
 			triggerNode.addEventListener('mouseleave', delayedClose, true);
-			break;
+		// let fallthrough so when hover declared, also focus/blur - ally.
 		case 'focus-blur':
 			triggerNode.addEventListener('focus', toggle, true);
 			triggerNode.addEventListener('blur', delayedClose, true);
@@ -478,8 +507,8 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 	// Lifecycle
 	return {
 		update: (newParams: any) => {
-			// with all the potential param setting changes, it is too complicated to patch
-			// best solution, except for state changes via open, just remove and re-run action
+			// with all the potential param setting changes, it may be too complicated to patch
+			// best solution, except for state changes via open, just remove and re-run action?
 			// if (newParams.open && newParams.open !== params.open) {
 			// 	if (newParams.open) {
 			// 		setTimeout(() => open(false), delayin);
@@ -491,14 +520,14 @@ export const tooltip: Action<HTMLElement, TooltipSettings | undefined> = (
 			// 	tooltip(triggerNode, { ...params, ...newParams, open: newParams.open });
 			// }
 
-			// Only support updates to string type content, custom css for tooltip and arrow.
-			// Remainder of settings cannot be updated after init.
+			// or Only support updates to string type content, custom css for tooltip and arrowm disabled, open.
+			// so remainder of settings cannot be updated after init.
 			// console.log('update', newParams);
 			// Object.keys(newParams).forEach((key) => {
 			// 	console.log(key);
-			// 	if (!['content', 'tooltipClass', 'arrowClass', 'open'].includes(key))
+			// 	if (!['content', 'tooltipClass', 'arrowClass', 'open', 'disabled'].includes(key))
 			// 		throw new Error(
-			// 			'Updates to Tooltip settings only support parameters content (strings), tooltipClass, ArrowClass, and open (state).',
+			// 			'Updates to Tooltip settings only support parameters content (strings), tooltipClass, ArrowClass, open (state), and disabled.',
 			// 		);
 			// });
 			// Prevent changes to Svelte component content reference.

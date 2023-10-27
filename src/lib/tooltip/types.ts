@@ -61,9 +61,14 @@ export type TooltipSettings = {
 	componentState?: object;
 	/** Set tooltip open/close state */
 	open?: boolean;
+	/** Declare explicit uuid */
+	uuid?: string;
 	/** Allow for disabling */
 	disabled?: boolean;
-	/** Provide the event type. */
+	/** Disable via disabled state of triggerElement */
+	linkDisabledToTrigger?: boolean;
+	/** if same data-popup in multiple locations, link all of their opening/closing */
+	linkTriggers?: boolean;
 	event?:
 		| 'click'
 		| 'hover'
@@ -82,9 +87,9 @@ export type TooltipSettings = {
 	middleware?: Middleware;
 	/** Provide the duration in milliseconds for longpress events to trigger. */
 	longPressDuration?: number;
-	/** Provide customizable timing related settings for fade in/out. */
+	/** Provide customizable timing related settings for default fade in/out transition. */
 	transition?: {
-		default?: boolean;
+		default?: boolean; // default true; enable/disable default fade in/out transition
 		duration?: number;
 		function?: string;
 		delayin?: number;
